@@ -28,41 +28,47 @@ jobs:
 
       - name: Build module
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
         run: |
           set -euo pipefail
-          
+
           # 显式设置环境变量，确保脚本能读取到
           export ANDROID_HOME="${ANDROID_HOME}"
           export ANDROID_SDK_ROOT="${ANDROID_HOME}"
           export ANDROID_NDK_HOME="${ANDROID_HOME}/ndk/27.3.13750724"
           export ANDROID_NDK_ROOT="${ANDROID_NDK_HOME}"
-          
+
           echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME"
-          
+
           # 执行构建
           python tools/uid-seccomp-module/build.py --output build/output
 
       - name: Verify the ZIP and its checksum
         shell: bash
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
         run: |
           set -euo pipefail
           # 使用 Python 进行验证，以确保在 Windows 下不依赖 Linux 工具
           python -c "
           import zipfile, glob, hashlib, os, sys
-          
+
           zips = glob.glob('build/output/*.zip')
           if not zips:
               print('Error: No zip found')
               sys.exit(1)
           z = zips[0]
-          
+
           # 验证 ZIP 和 module.prop
           with zipfile.ZipFile(z) as f:
               print('--- ZIP Contents ---')
               print(f.namelist())
               print('--- module.prop ---')
               print(f.read('module.prop').decode('utf-8'))
-              
+
           # 验证 SHA256
           sha_file = z + '.sha256'
           if os.path.exists(sha_file):
